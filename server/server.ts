@@ -4,23 +4,28 @@ import cors from "cors";
 import pkg from "lodash";
 const { shuffle } = pkg;
 
-interface Player {
+type Player = {
     name: string;
     role: string;
-}
+};
+
+type StartInfo = {
+    knowledgeTable: Record<string, string[]>;
+    roles: string[];
+};
+
+type VoteInfo = {
+    players: string[];
+    numFails: number;
+};
 
 let players: Player[] = [];
-let started = false;
+let inGame = false;
 let knowledgeTable: Record<string, string[]>;
 let voters: string[] = [];
 let numVoted = 0;
 let numFails: number;
 let round = 0;
-
-interface VoteInfo {
-    players: string[];
-    numFails: number;
-}
 
 let voteResults: VoteInfo[] = [];
 
@@ -28,20 +33,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.post("/game", (req: Request, res: Response) => {
-    players = [];
-    started = false;
-    voters = [];
-    numVoted = 0;
-    numFails = 0;
-    round = 0;
-    voteResults = [];
-    knowledgeTable = req.body as Record<string, string[]>;
-    console.log("Game created: ", knowledgeTable);
-    res.sendStatus(200);
-});
-
 app.post("/join", (req: Request, res: Response) => {
+    if (inGame) return res.sendStatus(401);
+
     const { name } = req.body as { name: string };
     console.log(`${name} joined`);
     const newPlayer: Player = { name, role: "" };
@@ -53,13 +47,30 @@ app.post("/join", (req: Request, res: Response) => {
     res.sendStatus(200);
 });
 
+app.post("/quit", (req: Request, res: Response) => {
+    if (inGame) return res.sendStatus(400);
+
+    const { name } = req.body as { name: string };
+    console.log(`${name} quit`);
+    players = players.filter((player) => player.name !== name);
+    res.sendStatus(200);
+});
+
 app.post("/start", (req: Request, res: Response) => {
-    console.log("Game started: ", started);
-    if (started) return res.sendStatus(400);
+    if (inGame) return res.sendStatus(401);
+    const { knowledgeTable: table, roles } = req.body as StartInfo;
+    if (roles.length !== players.length) return res.sendStatus(400);
 
-    started = true;
+    inGame = true;
+    voters = [];
+    numVoted = 0;
+    numFails = 0;
+    round = 0;
+    voteResults = [];
+    knowledgeTable = table;
 
-    const { roles } = req.body as { roles: string[] };
+    console.log("Game started");
+
     players = shuffle(players);
 
     if (roles.length !== players.length) return res.sendStatus(401);
@@ -71,7 +82,7 @@ app.post("/start", (req: Request, res: Response) => {
 app.get("/role", (req: Request, res: Response) => {
     const { name } = req.query as { name: string };
 
-    if (!started) return res.sendStatus(400);
+    if (!inGame) return res.sendStatus(400);
 
     console.log(knowledgeTable);
 
@@ -83,12 +94,18 @@ app.get("/role", (req: Request, res: Response) => {
     res.json({
         role,
         knows: shuffle(knows),
+        knowledgeTable,
     });
 });
 
 app.get("/list", (_: Request, res: Response) => {
-    console.log("Requested players list");
+    // console.log("Requested players list");
     res.json(players.map(({ name }) => name));
+});
+
+app.get("/active", (_: Request, res: Response) => {
+    // console.log("Requested game active status");
+    res.json(inGame);
 });
 
 app.post("/start-vote", (req: Request, res: Response) => {

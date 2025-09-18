@@ -1,26 +1,27 @@
-const API_URL = "https://mastadons.me:6767";
+// const API_URL = "https://mastadons.me:6767";
+const API_URL = "https://localhost:4000";
 
-export async function createGame(knowledgeTable: string) {
-    return await fetch(`${API_URL}/game`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: knowledgeTable,
-    });
-}
-
-export async function startGame(roles: string[]) {
+export async function startGame(knowledgeTable: string, roles: string[]) {
     return await fetch(`${API_URL}/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ roles }),
+        body: JSON.stringify({ knowledgeTable, roles }),
     });
 }
 
-export async function joinGame(playerName: string) {
+export async function joinGame(name: string) {
     return await fetch(`${API_URL}/join`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: playerName }),
+        body: JSON.stringify({ name }),
+    });
+}
+
+export async function quitGame(name: string) {
+    return await fetch(`${API_URL}/quit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
     });
 }
 
@@ -33,6 +34,12 @@ export async function requestRole(playerName: string) {
 
 export async function getPlayers() {
     return await fetch(`${API_URL}/list`, {
+        method: "GET",
+    });
+}
+
+export async function getActive() {
+    return await fetch(`${API_URL}/active`, {
         method: "GET",
     });
 }

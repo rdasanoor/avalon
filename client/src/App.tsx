@@ -5,7 +5,7 @@ import { UserProvider } from "./components/UserContext";
 
 function App() {
     return (
-        <div>
+        <div className="h-full">
             {/* Navigation */}
             <nav className="flex gap-4 p-4 bg-white text-black">
                 <Link to="/">Home</Link>

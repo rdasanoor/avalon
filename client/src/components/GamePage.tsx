@@ -40,11 +40,11 @@ export default function GamePage() {
 
         setName(newName);
 
-        if (audioRef.current) {
-            console.log("Sound playing");
-            audioRef.current.currentTime = 0;
-            audioRef.current.play();
-        }
+        // if (audioRef.current) {
+        //     console.log("Sound playing");
+        //     audioRef.current.currentTime = 0;
+        //     audioRef.current.play();
+        // }
     };
 
     const handleStartGame = async () => {
@@ -69,21 +69,11 @@ export default function GamePage() {
         setName("");
     };
 
-    // Poll to get all current players
+    // Poll to get all current players and active state
     useEffect(() => {
         const interval = setInterval(async () => {
-            const res = await Game.getPlayers();
-            setPlayers(await res.json());
-        }, 500);
-
-        return () => clearInterval(interval);
-    }, []);
-
-    // Poll to see if there is a game active
-    useEffect(() => {
-        const interval = setInterval(async () => {
-            const res = await Game.getActive();
-            setInGame(await res.json());
+            setPlayers(await (await Game.getPlayers()).json());
+            setInGame(await (await Game.getActive()).json());
         }, 500);
 
         return () => clearInterval(interval);
@@ -114,6 +104,14 @@ export default function GamePage() {
                     onClick={handleQuitGame}
                 >
                     Quit Game
+                </button>
+            )}
+            {name !== "" && inGame && (
+                <button
+                    className="text-black px-4 py-2 rounded bg-white text-xl font-bold mt-8 cursor-pointer w-fit"
+                    onClick={Game.endGame}
+                >
+                    End Game
                 </button>
             )}
             <div className="font-bold text-xl mt-8">Current Players</div>

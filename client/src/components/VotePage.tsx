@@ -3,6 +3,7 @@ import * as Game from "./game";
 import PlayerModal from "./Players";
 import VoteModal from "./Vote";
 import { useUser } from "./UserContext";
+import Timer from "./Timer";
 
 interface VoteInfo {
     players: string[];
@@ -30,7 +31,14 @@ export default function VotePage() {
 
         const interval = setInterval(async () => {
             const res = await Game.requestRole(name);
-            if (res.status == 200) setInfo(await res.json());
+            if (res.status == 200) {
+                let data = await res.json();
+                setInfo({
+                    role: data.role,
+                    knows: data.knows,
+                    knowledgeTable: JSON.parse(data.knowledgeTable),
+                });
+            }
         }, 500);
 
         return () => clearInterval(interval);
@@ -61,7 +69,7 @@ export default function VotePage() {
     };
 
     return (
-        <div>
+        <div className="h-full">
             {voting && (
                 <VoteModal
                     onClose={() => setVoting(false)}
@@ -101,7 +109,23 @@ export default function VotePage() {
                           ? "You are not in this game"
                           : "Waiting for game to start"}
                 </div>
-                <div className="flex-1 flex flex-col border-while border-2 mt-2 items-center">
+
+                {info && (
+                    <>
+                        <h1 className="w-full flex justify-center items-center p-4 text-3xl text-white">
+                            Knowledge Table
+                        </h1>
+                        {Object.entries(info.knowledgeTable).map(
+                            ([key, value], ind) => (
+                                <div className="text-center text-2xl" key={ind}>
+                                    {key}: {value.join(", ")}
+                                </div>
+                            ),
+                        )}
+                    </>
+                )}
+
+                <div className="flex-1 flex flex-col mt-2 items-center">
                     <h1 className="w-full flex justify-center items-center p-4 text-3xl text-white">
                         Vote Actions
                     </h1>
@@ -143,6 +167,10 @@ export default function VotePage() {
                             </li>
                         ))}
                     </div>
+                </div>
+
+                <div className="absolute bottom-2 right-2">
+                    <Timer />
                 </div>
             </div>
         </div>

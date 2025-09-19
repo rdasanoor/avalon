@@ -79,12 +79,15 @@ app.post("/start", (req: Request, res: Response) => {
     res.sendStatus(200);
 });
 
+app.post("/end", (_: Request, res: Response) => {
+    inGame = false;
+    return res.sendStatus(200);
+});
+
 app.get("/role", (req: Request, res: Response) => {
     const { name } = req.query as { name: string };
 
     if (!inGame) return res.sendStatus(400);
-
-    console.log(knowledgeTable);
 
     const role = players.find((player) => player.name == name)!.role;
     const knows = players
@@ -141,6 +144,49 @@ app.post("/vote", (req: Request, res: Response) => {
     }
 
     res.sendStatus(200);
+});
+
+// Timer code
+
+let interval: NodeJS.Timeout | null = null;
+let currentTime: number = 0;
+
+app.post("/start-timer", (req: Request, res: Response) => {
+    const { time } = req.body as { time: number };
+
+    if (time <= 0) return res.sendStatus(400);
+
+    console.log("Started timer: ", time);
+    currentTime = time;
+
+    if (interval) clearInterval(interval);
+
+    interval = setInterval(() => {
+        if (--currentTime < 0) {
+            clearInterval(interval!);
+        }
+    }, 1000);
+    res.sendStatus(200);
+});
+
+app.post("/toggle-timer", (_: Request, res: Response) => {
+    if (interval) {
+        clearInterval(interval);
+        interval = null;
+        return;
+    }
+
+    interval = setInterval(() => {
+        if (--currentTime < 0 && interval) {
+            clearInterval(interval);
+        }
+    }, 1000);
+
+    res.sendStatus(200);
+});
+
+app.get("/get-time", (_: Request, res: Response) => {
+    res.json(currentTime);
 });
 
 const PORT = 4000;

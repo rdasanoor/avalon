@@ -1,5 +1,4 @@
-// const API_URL = "https://mastadons.me:6767";
-const API_URL = "https://localhost:4000";
+const API_URL = "https://mastadons.me:6767";
 
 export async function startGame(knowledgeTable: string, roles: string[]) {
     return await fetch(`${API_URL}/start`, {
@@ -22,6 +21,13 @@ export async function quitGame(name: string) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
+    });
+}
+
+export async function endGame() {
+    return await fetch(`${API_URL}/end`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
     });
 }
 
@@ -63,5 +69,26 @@ export async function vote(name: string, vote: boolean) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, vote }),
+    });
+}
+
+export async function startTimer(time: number) {
+    return await fetch(`${API_URL}/start-timer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ time }),
+    });
+}
+
+export async function toggleTimer() {
+    return await fetch(`${API_URL}/toggle-timer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+    });
+}
+
+export async function getTime() {
+    return await fetch(`${API_URL}/get-time`, {
+        method: "GET",
     });
 }

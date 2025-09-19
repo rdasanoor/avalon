@@ -118,7 +118,10 @@ export default function VotePage() {
                         {Object.entries(info.knowledgeTable).map(
                             ([key, value], ind) => (
                                 <div className="text-center text-2xl" key={ind}>
-                                    {key}: {value.join(", ")}
+                                    {key}:{" "}
+                                    {value.length === 0
+                                        ? "noone"
+                                        : value.join(", ")}
                                 </div>
                             ),
                         )}

@@ -29,8 +29,7 @@ export default function Timer() {
     };
 
     return (
-        <div className="p-4 border rounded w-64 text-center">
-            <h2 className="text-xl mb-2">Timer</h2>
+        <div className="p-4 border-2 rounded-lg w-64 text-center">
             <p className="text-2xl mb-4">{seconds}s</p>
             <div className="flex justify-between">
                 <button

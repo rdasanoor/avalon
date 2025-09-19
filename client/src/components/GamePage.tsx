@@ -1,28 +1,19 @@
 import { useState, useRef, useEffect } from "react";
 import * as Game from "./game";
 import { useUser } from "./UserContext";
-
-function requestInfo(name: string) {
-    const info = window.prompt(`Enter ${name}`);
-
-    if (!info) return null;
-
-    if (!info.trim()) {
-        alert(`You must enter ${name}!`);
-        return null;
-    }
-
-    return info;
-}
+import GameSetupOverlay from "./Config";
+import type { Config } from "./Config";
+import * as Utils from "./utils";
 
 export default function GamePage() {
     const { name, setName } = useUser();
     const [players, setPlayers] = useState([]);
     const [inGame, setInGame] = useState(false);
+    const [configOpen, setConfigOpen] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
 
     const handleJoinGame = async () => {
-        const newName = requestInfo("name");
+        const newName = Utils.requestInfo("name");
 
         if (!newName) return;
 
@@ -47,20 +38,22 @@ export default function GamePage() {
         // }
     };
 
-    const handleStartGame = async () => {
-        const knowledgeTable = requestInfo("knowledge table");
+    const handleStartGame = async ({ knowledgeTable, roles }: Config) => {
+        const res = await Game.startGame(JSON.stringify(knowledgeTable), roles);
 
-        if (!knowledgeTable) return;
-
-        const roles = requestInfo("roles");
-
-        if (!roles) return;
-
-        const res = await Game.startGame(knowledgeTable, roles.split(","));
-
-        if (res.status == 400)
+        // Neither of these should never be happening, but they are here in case they do
+        // The UI should prevent both of these from happening
+        if (res.status == 400) {
             alert("Number of roles does not match number of players!");
-        if (res.status == 401) alert("Game already in progress!");
+            return;
+        }
+
+        if (res.status == 401) {
+            alert("Game already in progress!");
+            return;
+        }
+
+        setConfigOpen(false);
     };
 
     const handleQuitGame = async () => {
@@ -82,6 +75,14 @@ export default function GamePage() {
     return (
         <div className="flex flex-col justify-center items-center">
             <audio ref={audioRef} src="sound.mp3" preload="auto" />
+
+            <GameSetupOverlay
+                totalPlayers={players.length}
+                open={configOpen}
+                onClose={() => setConfigOpen(false)}
+                onConfirm={handleStartGame}
+            />
+
             {name === "" && (
                 <button
                     className="text-black px-4 py-2 rounded bg-white text-xl font-bold mt-8 cursor-pointer w-fit"
@@ -90,14 +91,16 @@ export default function GamePage() {
                     Join Game
                 </button>
             )}
+
             {!inGame && (
                 <button
                     className="text-black px-4 py-2 rounded bg-white text-xl font-bold mt-8 cursor-pointer w-fit"
-                    onClick={handleStartGame}
+                    onClick={() => setConfigOpen(true)}
                 >
                     Start Game
                 </button>
             )}
+
             {name !== "" && !inGame && (
                 <button
                     className="text-black px-4 py-2 rounded bg-white text-xl font-bold mt-8 cursor-pointer w-fit"
@@ -106,6 +109,7 @@ export default function GamePage() {
                     Quit Game
                 </button>
             )}
+
             {name !== "" && inGame && (
                 <button
                     className="text-black px-4 py-2 rounded bg-white text-xl font-bold mt-8 cursor-pointer w-fit"
@@ -114,6 +118,7 @@ export default function GamePage() {
                     End Game
                 </button>
             )}
+
             <div className="font-bold text-xl mt-8">Current Players</div>
             {players.map((player, i) => {
                 return (

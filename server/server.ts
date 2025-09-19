@@ -173,7 +173,7 @@ app.post("/toggle-timer", (_: Request, res: Response) => {
     if (interval) {
         clearInterval(interval);
         interval = null;
-        return;
+        return res.sendStatus(200);
     }
 
     interval = setInterval(() => {

@@ -71,7 +71,6 @@ app.post("/start", (req: Request, res: Response) => {
     numFails = 0;
     round = 0;
     voteResults = [];
-    console.log(table, JSON.parse(table));
     knowledgeTable = JSON.parse(table);
 
     console.log("Game started");
@@ -101,7 +100,7 @@ app.get("/role", (req: Request, res: Response) => {
     const data = {
         role,
         knows: shuffle(knows),
-        knowledgeTable,
+        knowledgeTable: JSON.stringify(knowledgeTable),
     };
 
     res.json(data);

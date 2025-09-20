@@ -97,12 +97,15 @@ app.get("/role", (req: Request, res: Response) => {
     const knows = players
         .filter((player) => knowledgeTable[role]?.includes(player.role))
         .map(({ name }) => name);
-
-    res.json({
+    const data = {
         role,
         knows: shuffle(knows),
         knowledgeTable,
-    });
+    };
+
+    console.log(data);
+
+    res.json(data);
 });
 
 app.get("/list", (_: Request, res: Response) => {

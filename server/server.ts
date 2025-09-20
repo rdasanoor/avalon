@@ -193,7 +193,7 @@ app.get("/get-time", (_: Request, res: Response) => {
     res.json(currentTime);
 });
 
-app.get("*", (_: Request, res: Response) => {
+app.get("/*", (_: Request, res: Response) => {
     res.sendFile(path.join(__dirname, "../client/dist/index.html"));
 });
 

@@ -71,6 +71,7 @@ app.post("/start", (req: Request, res: Response) => {
     numFails = 0;
     round = 0;
     voteResults = [];
+    console.log(table, JSON.parse(table));
     knowledgeTable = JSON.parse(table);
 
     console.log("Game started");

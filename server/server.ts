@@ -37,10 +37,6 @@ app.use(express.json());
 const __dirname = path.resolve();
 app.use(express.static(path.join(__dirname, "../client/dist")));
 
-app.get("*", (_: Request, res: Response) => {
-    res.sendFile(path.join(__dirname, "../client/dist/index.html"));
-});
-
 app.post("/join", (req: Request, res: Response) => {
     if (inGame) return res.sendStatus(401);
 
@@ -195,6 +191,10 @@ app.post("/toggle-timer", (_: Request, res: Response) => {
 
 app.get("/get-time", (_: Request, res: Response) => {
     res.json(currentTime);
+});
+
+app.get("*", (_: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, "../client/dist/index.html"));
 });
 
 const PORT = 4000;

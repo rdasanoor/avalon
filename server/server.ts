@@ -37,7 +37,7 @@ app.use(express.json());
 const __dirname = path.resolve();
 app.use(express.static(path.join(__dirname, "../client/dist")));
 
-app.get("/", (_: Request, res: Response) => {
+app.get("*", (_: Request, res: Response) => {
     res.sendFile(path.join(__dirname, "../client/dist/index.html"));
 });
 

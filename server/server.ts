@@ -94,6 +94,7 @@ app.get("/role", (req: Request, res: Response) => {
     if (!inGame) return res.sendStatus(400);
 
     const role = players.find((player) => player.name == name)!.role;
+    console.log(knowledgeTable[role]);
     const knows = players
         .filter((player) => knowledgeTable[role]?.includes(player.role))
         .map(({ name }) => name);

@@ -2,6 +2,7 @@ import express from "express";
 import type { Request, Response } from "express";
 import cors from "cors";
 import pkg from "lodash";
+import path from "path";
 const { shuffle } = pkg;
 
 type Player = {
@@ -32,6 +33,13 @@ let voteResults: VoteInfo[] = [];
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+const __dirname = path.resolve();
+app.use(express.static(path.join(__dirname, "../client/dist")));
+
+app.get("/", (_: Request, res: Response) => {
+    res.sendFile(path.join(__dirname, "../client/dist/index.html"));
+});
 
 app.post("/join", (req: Request, res: Response) => {
     if (inGame) return res.sendStatus(401);

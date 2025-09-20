@@ -11,7 +11,7 @@ type Player = {
 };
 
 type StartInfo = {
-    knowledgeTable: Record<string, string[]>;
+    knowledgeTable: string;
     roles: string[];
 };
 
@@ -71,7 +71,7 @@ app.post("/start", (req: Request, res: Response) => {
     numFails = 0;
     round = 0;
     voteResults = [];
-    knowledgeTable = table;
+    knowledgeTable = JSON.parse(table);
 
     console.log("Game started");
 
@@ -94,7 +94,6 @@ app.get("/role", (req: Request, res: Response) => {
     if (!inGame) return res.sendStatus(400);
 
     const role = players.find((player) => player.name == name)!.role;
-    console.log(knowledgeTable[role]);
     const knows = players
         .filter((player) => knowledgeTable[role]?.includes(player.role))
         .map(({ name }) => name);
@@ -103,8 +102,6 @@ app.get("/role", (req: Request, res: Response) => {
         knows: shuffle(knows),
         knowledgeTable,
     };
-
-    console.log(data);
 
     res.json(data);
 });

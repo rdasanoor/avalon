@@ -1,10 +1,10 @@
 import { useState, useEffect, createContext, useContext } from "react";
 
-function useLocalStorage<T>(key: string, initialValue: T) {
+function useLocalStorage(key: string, initialValue: string) {
     // Load from localStorage or fall back to initialValue
-    const [value, setValue] = useState<T>(() => {
+    const [value, setValue] = useState(() => {
         const item = localStorage.getItem(key);
-        return item ? JSON.parse(item) : initialValue;
+        return item ? item : initialValue;
     });
 
     // Update localStorage whenever state changes

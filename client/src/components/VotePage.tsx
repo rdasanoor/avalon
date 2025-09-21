@@ -110,24 +110,6 @@ export default function VotePage() {
                           : "Waiting for game to start"}
                 </div>
 
-                {info && (
-                    <>
-                        <h1 className="w-full flex justify-center items-center p-4 text-3xl text-white">
-                            Knowledge Table
-                        </h1>
-                        {Object.entries(info.knowledgeTable).map(
-                            ([key, value], ind) => (
-                                <div className="text-center text-2xl" key={ind}>
-                                    {key}:{" "}
-                                    {value.length === 0
-                                        ? "noone"
-                                        : value.join(", ")}
-                                </div>
-                            ),
-                        )}
-                    </>
-                )}
-
                 <div className="flex-1 flex flex-col mt-2 items-center">
                     <h1 className="w-full flex justify-center items-center p-4 text-3xl text-white">
                         Vote Actions

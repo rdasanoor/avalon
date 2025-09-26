@@ -51,7 +51,7 @@ type StartGameRequest = express.Request<{}, {}, StartGameRequestData>;
 type StartVoteRequest = express.Request<{}, {}, StartVoteRequestData>;
 type CastVoteRequest = express.Request<{}, {}, CastVoteRequestData>;
 
-let knowledgeTable: KnowledgeTable;
+// Maps player name to role
 let players: Record<string, string> = {};
 let started = false;
 let missions: Mission[] = [];
@@ -140,6 +140,8 @@ app.post("/game", (req: StartGameRequest, res) => {
         return;
     }
 
+    const knowledgeTable = req.body.knowledgeTable;
+
     for (const role of req.body.roles) {
         if (!(role in knowledgeTable)) {
             res.sendStatus(400);
@@ -158,13 +160,24 @@ app.post("/game", (req: StartGameRequest, res) => {
 
     const roles = shuffle(req.body.roles);
 
-    for (const player of Object.keys(players)) {
-        const role = roles.shift();
-        players[player] = role;
-        io.to(player).emit("role", role);
+    for (const player in players) {
+        players[player] = roles.shift();
     }
 
-    knowledgeTable = req.body.knowledgeTable;
+    for (const player in players) {
+        const knows = [];
+        const role = players[player]!;
+
+        for (const know of knowledgeTable[role]!) {
+            const other = Object.entries(players).find(
+                ([_, role]) => role == know,
+            )!;
+            knows.push(other);
+        }
+
+        io.to(player).emit("role", role, knows);
+    }
+
     started = true;
     missions = [];
 
@@ -174,7 +187,6 @@ app.post("/game", (req: StartGameRequest, res) => {
 app.delete("/game", (_, res) => {
     started = false;
     players = {};
-    knowledgeTable = {};
     io.emit("gameEnded");
     return res.sendStatus(200);
 });

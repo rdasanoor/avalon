@@ -1,20 +1,22 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import * as Game from "./game";
 import PlayerModal from "./Players";
 import VoteModal from "./Vote";
 import { useUser } from "./UserContext";
 import Timer from "./Timer";
+import { useSocket } from "./SocketContext";
 
 interface VoteInfo {
     players: string[];
-    numFails: number;
+    numFails: number | null; // null means the mission is not finished
 }
 
 interface StateInfo {
     role: string;
     knows: string[];
-    knowledgeTable: Record<string, string[]>;
 }
+
+type VoteStatus = "CanStart" | "InProgress" | "Voting";
 
 export default function VotePage() {
     const { name } = useUser();
@@ -22,45 +24,41 @@ export default function VotePage() {
     const [voteResults, setVoteResults] = useState<VoteInfo[]>([]);
     const [players, setPlayers] = useState<string[]>([]);
     const [voting, setVoting] = useState(false);
-    const [showVote, setShowVote] = useState(false);
-    const votingRounds = useRef<number[]>([]);
+    const [voteStatus, setVoteStatus] = useState<VoteStatus>("CanStart");
+    const socket = useSocket();
 
-    // Poll to get role only while role is undecided and if player has joined
+    // Poll to get role only if player has joined
     useEffect(() => {
-        if (info || !name) return;
+        if (!name) return;
 
-        const interval = setInterval(async () => {
-            const res = await Game.requestRole(name);
-            if (res.status == 200) {
-                let data = await res.json();
-                setInfo({
-                    role: data.role,
-                    knows: data.knows,
-                    knowledgeTable: JSON.parse(data.knowledgeTable),
-                });
-            }
-        }, 500);
+        socket.on("role", (role, knows) => setInfo({ role, knows }));
 
-        return () => clearInterval(interval);
-    }, [info, name]);
+        return () => {
+            socket.off("role");
+        };
+    }, [name]);
 
     // Display all vote results
     useEffect(() => {
-        const interval = setInterval(async () => {
-            const res = await Game.getCurrentVote();
-            const data = await res.json();
-            setVoteResults((_) => data.voteResults);
+        socket.on("voteStarted", ({ voters, failsRequired: _ }) => {
+            setVoting(voters.includes(name));
+            setVoteResults((voteResults) => [
+                ...voteResults,
+                { players: voters, numFails: null },
+            ]);
+        });
+        socket.on("voteEnded", (numFails) => {
+            setVoteResults((voteResults) => {
+                const lastMission = voteResults[voteResults.length - 1];
+                const finalMission = { players: lastMission.players, numFails };
+                return [...voteResults.splice(0, -1), finalMission];
+            });
+        });
 
-            if (
-                !votingRounds.current.includes(data.round) &&
-                data.voters.includes(name)
-            ) {
-                setShowVote(true);
-                votingRounds.current.push(data.round);
-            }
-        }, 500);
-
-        return () => clearInterval(interval);
+        return () => {
+            socket.off("voteStarted");
+            socket.off("voteEnded");
+        };
     }, [name]);
 
     const handleStartVote = async () => {
@@ -78,7 +76,7 @@ export default function VotePage() {
 
                         if (res.status == 200) {
                             setVoting(false);
-                            setShowVote(false);
+                            setVoteStatus("InProgress");
                         } else
                             alert("Bro you're a good guy. You can't vote bad.");
                     }}
@@ -114,7 +112,7 @@ export default function VotePage() {
                     <h1 className="w-full flex justify-center items-center p-4 text-3xl text-white">
                         Vote Actions
                     </h1>
-                    {name !== "" && (
+                    {name !== "" && voteStatus == "CanStart" && (
                         <button
                             className="text-black px-4 py-2 rounded bg-white text-xl font-bold cursor-pointer w-fit mt-2"
                             onClick={handleStartVote}
@@ -122,7 +120,7 @@ export default function VotePage() {
                             Start Vote
                         </button>
                     )}
-                    {name !== "" && showVote && (
+                    {name !== "" && voteStatus == "Voting" && (
                         <button
                             className="text-black px-4 py-2 rounded bg-white text-xl font-bold cursor-pointer w-fit mt-8"
                             onClick={() => setVoting(true)}
@@ -131,26 +129,31 @@ export default function VotePage() {
                         </button>
                     )}
                     <div className="flex flex-col mt-4 gap-4">
-                        {voteResults.map((result, idx) => (
-                            <li
-                                key={idx}
-                                className="flex justify-between items-center p-2 text-2xl gap-12"
-                            >
-                                <span>Voters: {result.players.join(", ")}</span>
-                                <span>
-                                    Number of fails:{" "}
-                                    <span
-                                        className={`font-bold ${
-                                            result.numFails === 0
-                                                ? "text-green-600"
-                                                : "text-red-600"
-                                        }`}
+                        {voteResults.map(
+                            (result, idx) =>
+                                result.numFails !== null && (
+                                    <li
+                                        key={idx}
+                                        className="flex justify-between items-center p-2 text-2xl gap-12"
                                     >
-                                        {result.numFails}
-                                    </span>
-                                </span>
-                            </li>
-                        ))}
+                                        <span>
+                                            Voters: {result.players.join(", ")}
+                                        </span>
+                                        <span>
+                                            Number of fails:{" "}
+                                            <span
+                                                className={`font-bold ${
+                                                    result.numFails === 0
+                                                        ? "text-green-600"
+                                                        : "text-red-600"
+                                                }`}
+                                            >
+                                                {result.numFails}
+                                            </span>
+                                        </span>
+                                    </li>
+                                ),
+                        )}
                     </div>
                 </div>
 

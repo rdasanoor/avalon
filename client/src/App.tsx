@@ -2,6 +2,7 @@ import { Routes, Route, Link } from "react-router-dom";
 import GamePage from "./components/GamePage";
 import VotePage from "./components/VotePage";
 import { UserProvider } from "./components/UserContext";
+import { SocketProvider } from "./components/SocketContext";
 
 function App() {
     return (
@@ -13,12 +14,14 @@ function App() {
             </nav>
 
             {/* Route definitions */}
-            <UserProvider>
-                <Routes>
-                    <Route path="/" element={<GamePage />} />
-                    <Route path="/vote" element={<VotePage />} />
-                </Routes>
-            </UserProvider>
+            <SocketProvider>
+                <UserProvider>
+                    <Routes>
+                        <Route path="/" element={<GamePage />} />
+                        <Route path="/vote" element={<VotePage />} />
+                    </Routes>
+                </UserProvider>
+            </SocketProvider>
         </div>
     );
 }

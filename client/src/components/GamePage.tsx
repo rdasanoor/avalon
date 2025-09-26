@@ -4,13 +4,15 @@ import { useUser } from "./UserContext";
 import GameSetupOverlay from "./Config";
 import type { Config } from "./Config";
 import * as Utils from "./utils";
+import { useSocket } from "./SocketContext";
 
 export default function GamePage() {
     const { name, setName } = useUser();
-    const [players, setPlayers] = useState([]);
+    const [players, setPlayers] = useState<string[]>([]);
     const [inGame, setInGame] = useState(false);
     const [configOpen, setConfigOpen] = useState(false);
     const audioRef = useRef<HTMLAudioElement>(null);
+    const socket = useSocket();
 
     const handleJoinGame = async () => {
         const newName = Utils.requestInfo("name");
@@ -64,12 +66,19 @@ export default function GamePage() {
 
     // Poll to get all current players and active state
     useEffect(() => {
-        const interval = setInterval(async () => {
-            setPlayers(await (await Game.getPlayers()).json());
-            setInGame(await (await Game.getActive()).json());
-        }, 500);
+        socket.on("playerJoined", ({ name }) =>
+            setPlayers((players) =>
+                players.includes(name) ? players : [...players, name],
+            ),
+        );
+        socket.on("role", () => setInGame(true));
+        socket.on("gameEnded", () => setInGame(false));
 
-        return () => clearInterval(interval);
+        return () => {
+            socket.off("playerJoined");
+            socket.off("role");
+            socket.off("gameEnded");
+        };
     }, []);
 
     return (
